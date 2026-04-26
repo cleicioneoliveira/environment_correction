@@ -12,7 +12,9 @@ import pandas as pd
 from .columns import (
     HEAT_REQUIRED_COLUMNS,
     MONITORAMENTO_REQUIRED_COLUMNS,
-    normalize_col,
+    HeatColumn,
+    MonitoramentoColumn,
+    canonicalize_columns,
     require_columns,
 )
 from .config import AppConfig
@@ -52,21 +54,7 @@ def _coerce_datetime_column(df: pd.DataFrame, column: str, df_name: str) -> pd.D
 
 
 def load_inputs(config: AppConfig, logger: logging.Logger) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Read, normalize and validate the heat and monitoring input files.
-
-    Parameters
-    ----------
-    config : AppConfig
-        Runtime configuration.
-    logger : logging.Logger
-        Application logger.
-
-    Returns
-    -------
-    tuple of pandas.DataFrame
-        ``(heat, monitoramento)`` with normalized column names and datetime
-        columns coerced.
-    """
+    """Read, canonicalize and validate the heat and monitoring input files."""
 
     logger.info("Lendo arquivo heat: %s", config.heat_path)
     heat = pd.read_csv(config.heat_path, low_memory=False)
@@ -74,14 +62,14 @@ def load_inputs(config: AppConfig, logger: logging.Logger) -> tuple[pd.DataFrame
     logger.info("Lendo arquivo monitoramento: %s", config.monitoramento_path)
     mon = pd.read_csv(config.monitoramento_path, low_memory=False)
 
-    heat.columns = [normalize_col(c) for c in heat.columns]
-    mon.columns = [normalize_col(c) for c in mon.columns]
+    heat = canonicalize_columns(heat)
+    mon = canonicalize_columns(mon)
 
     require_columns(heat, HEAT_REQUIRED_COLUMNS, "heat")
     require_columns(mon, MONITORAMENTO_REQUIRED_COLUMNS, "monitoramento")
 
-    heat = _coerce_datetime_column(heat, "timestamp", "heat")
-    mon = _coerce_datetime_column(mon, "data_hora", "monitoramento")
+    heat = _coerce_datetime_column(heat, HeatColumn.TIMESTAMP, "heat")
+    mon = _coerce_datetime_column(mon, MonitoramentoColumn.DATETIME, "monitoramento")
 
     return heat, mon
 
