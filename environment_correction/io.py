@@ -12,7 +12,7 @@ import pandas as pd
 from .columns import (
     HEAT_REQUIRED_COLUMNS,
     MONITORAMENTO_REQUIRED_COLUMNS,
-    normalize_col,
+    normalize_columns,
     require_columns,
 )
 from .config import AppConfig
@@ -74,8 +74,8 @@ def load_inputs(config: AppConfig, logger: logging.Logger) -> tuple[pd.DataFrame
     logger.info("Lendo arquivo monitoramento: %s", config.monitoramento_path)
     mon = pd.read_csv(config.monitoramento_path, low_memory=False)
 
-    heat.columns = [normalize_col(c) for c in heat.columns]
-    mon.columns = [normalize_col(c) for c in mon.columns]
+    heat = normalize_columns(heat)
+    mon = normalize_columns(mon)
 
     require_columns(heat, HEAT_REQUIRED_COLUMNS, "heat")
     require_columns(mon, MONITORAMENTO_REQUIRED_COLUMNS, "monitoramento")
